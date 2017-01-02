@@ -7,20 +7,26 @@
 
 ## The rankhospital function take 3 arguments: 
 # the 2-character abbreviated name of a state, an outcome name, and the rank
-# of the hosiptal within the state.  The rank may be a number or 'best' or 'worst'
-# The function reads the outcome-of-care-measures.csv le and returns a character vector
-# with the name of the hospital that has the specified ranking of 30-day mortality for the specified outcome
-# in that state. The outcomes can be one of "heart attack", "heart failure", or "pneumonia". 
-# Hospitals that do not have data on a particular
-# outcome should be excluded from the set of hospitals when deciding the rankings.
-# Handling ties. If there is a tie for the best hospital for a given outcome, then the hospital names should
-# be sorted in alphabetical order and the first hospital in that set is be chosen 
+# of the hosiptal within the state.  
+# The rank may be a number or 'best' or 'worst'
+# The function reads the outcome-of-care-measures.csv file and returns a 
+# character vector with the name of the hospital that has the specified ranking
+# of 30-day mortality for the specified outcome in that state. 
+# The outcomes can be one of "heart attack", "heart failure", or "pneumonia". 
+# Hospitals that do not have data on a particular outcome are excluded from the
+# set of hospitals when deciding the rankings.
+# Handling ties: If there is a tie for the best hospital for a given outcome, 
+# then the hospital names are sorted in alphabetical order and the 
+# first hospital in that set is chosen. 
 
 
 rankhospital <- function(state, outcome, num = 'best') {
   
   ## Read outcome data
-  outcomeDf <- read.csv("outcome-of-care-measures.csv", na.strings = "Not Available", stringsAsFactors = FALSE)
+  # setting stringsAsFactors to false is necessary; otherwise, the output will
+  # include a summary of the levels of the hospital.name factor
+  outcomeDf <- read.csv("outcome-of-care-measures.csv", 
+                        na.strings = "Not Available", stringsAsFactors = FALSE)
   
   ## Get list of valid states
   statesDf <- unique(df['State'])
@@ -37,6 +43,8 @@ rankhospital <- function(state, outcome, num = 'best') {
   }
   
   # validate num (ranking)
+  # not part of the instructions in the assignment but prevents entry of 
+  # non-numerics other than 'best' and 'worst'
   if (!(num %in% c('best', 'worst'))) {
     if (!(is.numeric(num))) {
       stop("invalid rank")
@@ -45,8 +53,10 @@ rankhospital <- function(state, outcome, num = 'best') {
   
   
   ## Return hospital name in that state with 30-day death rate matching rank
+  
   # map the valid outcomes to their column index in the data file
-  valid_outcome_colidx <- c("heart attack" = 11, "heart failure" = 17, "pneumonia" = 23)
+  valid_outcome_colidx <- c("heart attack" = 11, "heart failure" = 17, 
+                            "pneumonia" = 23)
   
   # create data.frame with just the columns necessary for the analysis
   # Hospital Names is col index : 2

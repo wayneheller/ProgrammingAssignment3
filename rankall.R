@@ -8,24 +8,33 @@
 ## The rankall function takes 2 arguments: 
 # an outcome name, and the rank of the hosiptal within the state.  
 # The rank may be a number or 'best' or 'worst'
-# The function reads the outcome-of-care-measures.csv and returns a character vector
-# with the name of the hospital and the state abbreviation
+# The function reads the outcome-of-care-measures.csv and returns a 
+# character vector with the name of the hospital and the state abbreviation
 # that has the specified ranking of 30-day mortality for the specified outcome
-# in that state. The outcomes can be one of "heart attack", "heart failure", or "pneumonia". 
+# in that state. 
+# The outcomes can be one of "heart attack", "heart failure", or "pneumonia". 
 # Hospitals that do not have data on a particular
-# outcome should be excluded from the set of hospitals when deciding the rankings.
-# Handling ties. If there is a tie for the best hospital for a given outcome, 
-# then the hospital names should
-# be sorted in alphabetical order and the first hospital in that set is be chosen 
-# the function returns a data.frame with columns 'hospital' and 'state'
+# outcome are excluded from the set of hospitals when deciding the rankings.
+# Handling ties: If there is a tie for the best hospital for a given outcome, 
+# then the hospital names are sorted in alphabetical order and the 
+# first hospital in that set is chosen. 
+# This function returns a data.frame with columns 'hospital' and 'state'
 
 rankall <- function(outcome, num = 'best') {
   
   ## Read outcome data
-  outcomeDf <- read.csv("outcome-of-care-measures.csv", na.strings = "Not Available", stringsAsFactors = FALSE)
+  # setting stringsAsFactors to false is necessary; otherwise, the output will
+  # include a summary of the levels of the hospital.name factor
+  outcomeDf <- read.csv("outcome-of-care-measures.csv", 
+                        na.strings = "Not Available", stringsAsFactors = FALSE)
   
   ## Get list of valid states
   statesDf <- unique(df['State'])
+  
+  # sort the data.frame by state abbreviation so the output matches expected
+  # NOTE: this operation converts this data.frame to a factor
+  statesDf <- statesDf[order(statesDf$State),]
+  
   
   # validate outcome
   valid_outcomes <- c("heart attack", "heart failure", "pneumonia")
@@ -45,7 +54,8 @@ rankall <- function(outcome, num = 'best') {
   ## death rate matching rank
   
   # map the valid outcomes to their column index in the data file
-  valid_outcome_colidx <- c("heart attack" = 11, "heart failure" = 17, "pneumonia" = 23)
+  valid_outcome_colidx <- c("heart attack" = 11, "heart failure" = 17, 
+                            "pneumonia" = 23)
   
   # create data.frame with just the columns necessary for the analysis
   # Hospital Names is col index : 2
@@ -63,10 +73,10 @@ rankall <- function(outcome, num = 'best') {
   hospitals <- vector(mode = "character")
   states <- vector(mode = "character")
   
-  # loop through all the states and create two vectors with the matching
+  # loop through all the states and populate the two vectors with the matching
   # hospital for each state or an NA for the state if there is no matching
   # hospital
-  for (state in statesDf$State) {
+  for (state in statesDf) {
     
     # select rows for the chosen state
     resultsDf <- analysisDf[analysisDf$State == state, ]
@@ -94,6 +104,7 @@ rankall <- function(outcome, num = 'best') {
       states <- c(states, state)
     }
   }
+  # create the data.frame to be returned using the two interim vectors
   resultsDF <- data.frame(hospital = hospitals, state = states)
   resultsDF
 }
